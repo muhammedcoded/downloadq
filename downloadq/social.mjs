@@ -46,7 +46,7 @@ export function extractorCommand() {
   return {cmd:process.env.PYTHON_BIN || (process.platform==='win32'?'py':'python3'), prefix:['-m','yt_dlp']};
 }
 export function extractorBaseArgs() {
-  return ['--ignore-config','--no-playlist','--no-progress','--no-warnings','--js-runtimes','node','--socket-timeout','15','--retries','2','--fragment-retries','2','--no-cache-dir'];
+  return ['--ignore-config','--no-playlist','--no-progress','--no-warnings','--js-runtimes',process.env.YTDLP_JS_RUNTIME || 'node','--socket-timeout','15','--retries','2','--fragment-retries','2','--no-cache-dir'];
 }
 export function runExtractor(args,{timeoutMs=45000,outputLimit=OUTPUT_LIMIT}={}) {
   const {cmd,prefix}=extractorCommand();
@@ -64,8 +64,16 @@ export function runExtractor(args,{timeoutMs=45000,outputLimit=OUTPUT_LIMIT}={})
       if(ended)return;
       if(code!==0){
         const lines=stderr.replace(/\x1b\[[0-9;]*m/g,'').split('\n');
-        const detail=lines.filter(s=>/ERROR:|Error:|WARNING:/.test(s)).slice(-2).join(' ').replace(/ERROR:\s*/g,'').slice(0,270).trim();
-        finish(new MediaError(detail||'This video is unavailable, restricted, or not accessible from this server.'));
+        const detail=lines.filter(s=>/ERROR:|Error:|WARNING:/.test(s)).slice(-2).join(' ').replace(/ERROR:\s*/g,'').slice(0,380).trim();
+        const message = /confirm you.re not a bot|login_required|sign in|login required/i.test(detail)
+          ? 'The video platform requires sign-in or is blocking requests from this server. Try another accessible public video.'
+          : /not available|private|unavailable|members.only|age.restricted/i.test(detail)
+          ? 'This video is private, restricted, or unavailable to the server.'
+          : /unsupported url/i.test(detail)
+          ? 'This link type is not currently supported by the provider extractor.'
+          : detail || 'The video could not be retrieved from this provider.';
+        console.warn('[DownloadQ extractor]', detail || 'Exit code '+code);
+        finish(new MediaError(message));
       }else finish(null,{stdout,stderr});
     });
   });

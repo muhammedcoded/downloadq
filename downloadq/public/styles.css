@@ -6,3 +6,11 @@
 .rights-check{display:flex;align-items:center;gap:9px;margin:12px 2px 0;color:#56506b;font-size:13px;font-weight:500;cursor:pointer}.rights-check input{width:17px;height:17px;accent-color:#6d3ff1}.dark .rights-check{color:#d7ceeb}.yt-meta{display:flex;gap:12px;align-items:center;padding:15px;border:1px solid #e9e4fa;border-radius:16px;background:#fcfaff;margin:12px 0}.yt-meta img{width:112px;aspect-ratio:16/9;object-fit:cover;border-radius:9px}.yt-meta div{flex:1;min-width:0}.yt-meta strong{display:block;overflow:hidden;text-overflow:ellipsis}.yt-meta small{display:block;color:#79758e;margin-top:4px}.yt-actions{display:flex;flex-wrap:wrap;gap:10px}.yt-actions a{background:#6039d5;color:white;border-radius:10px;padding:10px 16px;text-decoration:none;font-weight:700}.yt-actions a:nth-child(2){background:#efeafd;color:#5138b0}.dark .yt-meta{background:#242035;border-color:#3a315c}.dark .yt-meta small{color:#bbb2cd}
 
 .tab-title{display:inline-flex;align-items:center;font-weight:800;color:#5934d6;font-size:14px;padding:6px 0}.result-badge{color:#6b42e7!important;text-transform:uppercase;letter-spacing:.08em;font-weight:800}.yt-meta strong{overflow-wrap:anywhere}
+
+/* DownloadQ 3: accessible download buttons and honest progress feedback */
+.yt-actions button{border:0;background:var(--accent);color:white;border-radius:11px;padding:13px 20px;font-weight:800;cursor:pointer}
+.yt-actions button:nth-child(2){background:#eee8ff;color:#5138b0}
+.yt-actions button:hover{filter:brightness(.94)}
+.yt-actions button:disabled{opacity:.55;cursor:wait}
+.download-progress{margin-top:12px;border:1px solid #c9b9f5;border-radius:12px;background:var(--soft);padding:14px;color:var(--ink);font-size:13px}
+.download-progress[hidden]{display:none}

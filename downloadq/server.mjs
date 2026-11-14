@@ -73,7 +73,7 @@ export async function openMedia(raw,method='GET'){
 function sendJson(res,status,data){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Access-Control-Allow-Origin':'none'});res.end(JSON.stringify(data));}
 function readBody(req){return new Promise((resolve,reject)=>{let str='';req.on('data',b=>{str+=b;if(str.length>4000){req.destroy();reject(new Error('Request too large.'));}});req.on('end',()=>{try{resolve(JSON.parse(str));}catch{reject(new Error('Invalid JSON.'));}});req.on('error',reject);});}
 let activeSocialDownloads=0;
-const RATE=new Map();function rateLimit(req){const key=req.socket.remoteAddress||'unknown';let item=RATE.get(key);if(!item||Date.now()-item.since>60000){item={since:Date.now(),count:0};RATE.set(key,item);}item.count++;return item.count<=45;}
+const RATE=new Map();function rateLimit(req){const key=req.socket.remoteAddress||'unknown';let item=RATE.get(key);if(!item||Date.now()-item.since>60000){item={since:Date.now(),count:0};RATE.set(key,item);}item.count++;return item.count<=30;}
 const server=http.createServer(async(req,res)=>{
  try{
   const u=new URL(req.url||'/',`http://${req.headers.host||'localhost'}`);
@@ -82,13 +82,11 @@ const server=http.createServer(async(req,res)=>{
    if(u.pathname==='/api/health')return sendJson(res,200,{ok:true,product:'DownloadQ'});
    if((u.pathname==='/api/social/inspect'||u.pathname==='/api/youtube/inspect')&&req.method==='POST'){
     const body=await readBody(req);
-    if(body.confirmRights!==true)return sendJson(res,400,{error:'Please confirm you have permission to download this video.'});
     try{return sendJson(res,200,await inspectSocial(body.url));}
     catch(e){return sendJson(res,e.status||422,{error:e.message});}
    }
    if((u.pathname==='/api/social/download'||u.pathname==='/api/youtube/download')&&req.method==='GET'){
     if(activeSocialDownloads>=2)return sendJson(res,429,{error:'Downloads are busy. Please try again shortly.'});
-    if(u.searchParams.get('confirm')!=='yes')return sendJson(res,400,{error:'Permission confirmation required.'});
     activeSocialDownloads++;
     try{
      const file=await downloadSocial(u.searchParams.get('url')||'',u.searchParams.get('format')||'mp4');

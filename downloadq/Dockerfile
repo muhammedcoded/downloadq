@@ -8,6 +8,7 @@ RUN python3 -m venv /opt/yt-dlp && /opt/yt-dlp/bin/pip install --no-cache-dir -U
 ENV PATH="/opt/yt-dlp/bin:${PATH}"
 ENV YTDLP_BIN=/opt/yt-dlp/bin/yt-dlp
 ENV NODE_ENV=production
+ENV YTDLP_JS_RUNTIME=node
 WORKDIR /app
 COPY . .
 USER node

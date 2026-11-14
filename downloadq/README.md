@@ -1,74 +1,95 @@
-# DownloadQ
+# DownloadQ 3.0
 
-A web-based media downloader for **public videos you own or have permission to save**. Paste a link, preview video metadata, choose MP4 or MP3, and download through a server-hosted media processor. Built with Node.js, `yt-dlp`, and FFmpeg.
+**Online media downloader for supported public links.** Built with Node.js, yt-dlp, FFmpeg, and a Dockerfile for Railway. A product of Remscorp Tech.
 
-**A product of Remscorp Tech.**
+## What this version changes
 
-## What's supported
+- Removes the compulsory permission checkbox from the website **and backend**. Users do not need DownloadQ accounts.
+- Adds server-confirmed video metadata previews, MP4 and MP3 buttons, and browser-visible errors for failed downloads.
+- Uses a supported Node.js runtime (`--js-runtimes node`) for yt-dlp. The Dockerfile installs `yt-dlp[default]`, including the matching EJS scripts.
+- Shows download status rather than silently starting an HTML/JSON error download.
+- Retains input validation, server-side concurrency limits, temporary-file cleanup, and direct-media URL protection.
 
-- Public YouTube videos and Shorts
-- Public TikTok videos and official short share links
-- Instagram Reels/posts, Facebook videos, X video posts, and LinkedIn posts **when the platform allows the extractor to access the content**
-- Direct public HTTPS links to media files
-- Preview thumbnails, video titles, uploaders, and duration when available
-- MP4 video download and MP3 audio extraction, with server-side processing
-- Responsive purple-and-white website with dark mode
+**Availability warning:** A successful deployment does **not** guarantee downloads from every social-media platform. YouTube and other sites may require authentication or block data-center addresses. DownloadQ does not bypass login requirements, DRM, or site protections. Use it for media you have the right to save.
 
-Not all videos on these services are available. The app will report extraction errors for private posts, login-gated videos, age-restricted media, blocked datacenter IPs, unavailable formats, and platform changes. No login bypass or DRM circumvention is implemented. Do not represent any platform as universally supported.
+## Repository layout
 
-## Quick local setup (VS Code)
+```text
+DownloadQ repo (GitHub)
+└── downloadq/                  # Railway root directory /downloadq
+    ├── Dockerfile
+    ├── package.json
+    ├── server.mjs
+    ├── social.mjs
+    ├── youtube.mjs
+    ├── public/
+    │   ├── index.html
+    │   ├── app.js
+    │   └── styles.css
+    └── tests/
+```
 
-This version is a **server application**, not a static HTML website. It uses the backend for actual online video downloads.
+## Run locally
 
-Install Node.js 22+, Python 3, yt-dlp, and FFmpeg. For YouTube, yt-dlp also needs a supported JavaScript runtime; this project uses Node 22 through `--js-runtimes node`.
+Requirements: Node.js 22+, Python 3.11+, FFmpeg, and yt-dlp. Install yt-dlp with `python -m pip install -U "yt-dlp[default]"` and set `YTDLP_BIN` to your yt-dlp executable if needed.
 
-On Windows PowerShell:
-
-```powershell
-py -m pip install -U "yt-dlp[default]"
-winget install Gyan.FFmpeg
+```bash
+cd downloadq
 node server.mjs
 ```
 
-On some Windows machines `py -m yt_dlp` is unavailable until Python is on PATH. Set `YTDLP_BIN` to an installed yt-dlp executable if needed. Restart the terminal after installing FFmpeg. Open `http://localhost:3000`.
+Open http://localhost:3000. Run `npm test` for the automated tests.
 
-## Deploy online using Railway (recommended)
+## Update the existing GitHub repository
 
-You do **not** need to install yt-dlp, FFmpeg, or Python on visitors' computers.
+Your existing repository is `muhammedcoded/downloadq` and Railway currently uses `/downloadq` as the Root Directory.
 
-1. Create a GitHub repository and upload the **contents** of this project folder, including `Dockerfile`, `server.mjs`, `social.mjs`, and `public/`.
-2. Open [Railway](https://railway.com/), choose **New Project → Deploy from GitHub Repo**, and select your repository.
-3. Railway builds this Dockerfile, installing Node.js, Python, yt-dlp, and FFmpeg in the cloud.
-4. In your Railway service, add a public domain through Networking. The application listens to `process.env.PORT` automatically.
-5. Visit your new domain, paste a supported public video link, and test a video that you own or are authorized to save.
-6. When ready, add your custom domain in Railway and configure your DNS records.
+**Via VS Code and Git:**
 
-No Supabase database is needed for basic downloads. You can add a database later for accounts and paid plans.
-
-**Production considerations:** Media extractors may fail from cloud host IPs. Long downloads consume server RAM, CPU, bandwidth, and ephemeral disk space. Railway may charge for bandwidth and compute. Add per-user quotas, abuse prevention, monitoring, a queue, additional rate limits, caching rules and Terms/Privacy pages before public launch. The starter's limit is two concurrent media jobs per instance. Server files are deleted after each download, and a 200 MB output ceiling is enforced, but monitor temporary storage and unexpected process termination. Do not claim universal platform availability.
-
-## API
-
-- `GET /api/health` returns application status.
-- `POST /api/social/inspect` with `{"url":"https://...","confirmRights":true}` returns metadata and format options.
-- `GET /api/social/download?url=...&format=mp4&confirm=yes` processes an authorized video and returns a file.
-- `POST /api/inspect` inspects direct media URLs.
-- `GET /api/download?url=...` streams a direct media file.
-
-Only publicly accessible URLs are supported. The application does not request users' social-media passwords, browser cookies, or access tokens.
-
-## Tests
+1. Download and extract the update ZIP.
+2. Clone the existing repo (once): `git clone https://github.com/muhammedcoded/downloadq.git`.
+3. Replace the **contents of the repository's `downloadq/` directory** with the contents of the new ZIP's `downloadq/` directory. Do not make a second nested `downloadq/downloadq/` directory.
+4. In the repository root, run:
 
 ```bash
-npm test
+git add -A
+git commit -m "Improve downloader workflow and errors"
+git push origin main
 ```
 
-Automated tests use simulated media extractor responses and verify URL validation and API behavior. **They do not establish that every TikTok/YouTube/etc. link will work from your deployed server.** Verify real video previews and downloads from Railway after deployment.
+**Via GitHub website:** Open the repository, enter its `downloadq/` folder, and use **Add file → Upload files** to replace changed files. Preserve each file's directory path. For many files, Git is more dependable.
 
-## Copyright and acceptable use
+## Railway settings
 
-Only download videos you own, are licensed to download, or otherwise have permission to save. Respect platform terms, privacy, copyright, and takedown requests.
+- **Source repo:** `muhammedcoded/downloadq`
+- **Root Directory:** `/downloadq`
+- **Builder:** Dockerfile
+- **Dockerfile Path:** `/downloadq/Dockerfile` if Railway asks for an absolute repository path
+- **Start command:** provided by Dockerfile, no custom command necessary
+- **Public Networking:** keep your current domain; the server reads Railway's `PORT` environment variable
+- **YTDLP_BIN:** `/opt/yt-dlp/bin/yt-dlp` (already defined in Dockerfile)
+- **YTDLP_JS_RUNTIME:** `node` (already defined in Dockerfile)
+
+Railway usually starts a new deployment automatically after a commit to the connected branch. Check the Build Logs and Deploy Logs. If autodeploy is disabled, use the service Deployments option to deploy the latest commit.
+
+## Verifying the new site
+
+1. Visit `/api/health` on your Railway URL. It should return `{"ok":true,"product":"DownloadQ"}`.
+2. Refresh the home page with Ctrl+Shift+R. The permission checkbox should be **gone**.
+3. Paste a public video link you are authorized to download and click **Check link**.
+4. If the provider allows access, its preview and MP4/MP3 buttons appear. If access is blocked, the website explains the failure.
+5. Click MP4 and check that a file actually appears in your browser's Downloads folder. A title or thumbnail alone is **not** proof of a successful download.
+
+## Tests and what they prove
+
+`npm test` includes 22 automated tests, including HTTP tests with a **mock extractor** for metadata and MP4 response. These confirm code integration, not successful access to a real YouTube/TikTok video from a Railway IP.
+
+We have **not** performed a real live-platform download or built the Docker image in this authoring environment. Browser automation against localhost was also blocked, so verify those parts after deployment.
+
+## Operations
+
+Downloads may take time and consume Railway CPU, memory, bandwidth, and disk. Cap concurrency and file size, monitor usage, and investigate errors in Railway Deploy Logs. Keep extractor dependencies current by rebuilding the Docker image. Do not expose cookies, passwords, or credentials in frontend files or GitHub.
 
 ## License
 
-MIT, see LICENSE.
+MIT. See `LICENSE`.
